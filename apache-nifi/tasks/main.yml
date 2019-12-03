@@ -1,0 +1,116 @@
+---
+# tasks file for apache-nifi
+
+- name: Install Nifi dependencies
+  apt:
+    name: openjdk-8-jre
+    update_cache: True
+  tags:
+    - apache-nifi
+    - nifi
+
+#- name: Download apache nifi
+#  get_url:
+#    url: "http://mirror.linux-ia64.org/apache/nifi/{{ nifi_version }}/nifi-{{ nifi_version }}-bin.tar.gz"
+#    dest: "/opt/nifi-{{ nifi_version }}-bin.tar.gz"
+#    backup: True
+#    force: True
+#  register: download
+#  tags:
+#    - apache-nifi
+#    - nifi
+
+#- name: Extract nifi.tgz into /opt/nifi/
+#  unarchive:
+#    src: "/opt/nifi-{{ nifi_version }}-bin.tar.gz"
+#    dest: /opt/
+#    remote_src: True
+#  when: download.changed
+#  tags:
+#    - apache-nifi
+#    - nifi
+
+- name: Create a symbolic link
+  file:
+    src: "/opt/nifi-{{ nifi_version }}"
+    dest:  /opt/nifi
+    state: link
+    force: True
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Create config /opt/nifi/conf/nifi.properties
+  template:
+    src: nifi.properties
+    dest: /opt/nifi/conf/nifi.properties
+    backup: true
+  notify: restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Create config /opt/nifi/conf/bootstrap.conf
+  template:
+    src: bootstrap.conf
+    dest: /opt/nifi/conf/bootstrap.conf
+    backup: true
+  notify: restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Create config /opt/nifi/conf/login-identity-providers.xml
+  template:
+    src: login-identity-providers.xml
+    dest: /opt/nifi/conf/login-identity-providers.xml
+    backup: true
+  notify: restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Create config /opt/nifi/conf/authorizers.xml
+  template:
+    src: authorizers.xml
+    dest: /opt/nifi/conf/authorizers.xml
+    backup: true
+  notify:
+    - remove old users
+    - restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: copy keystore
+  copy:
+    dest: /opt/nifi/conf/
+    src: "{{ item }}"
+    mode: 0600
+    backup: true
+  with_items:
+    - keystore.jks
+    - truststore.jks
+    - nifi-key.key
+    - nifi-cert.pem
+  notify: restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Create /etc/systemd/system/nifi.service
+  template:
+    src: nifi.service
+    dest: /etc/systemd/system/nifi.service
+  notify: restart nifi
+  tags:
+    - apache-nifi
+    - nifi
+
+- name: Enable systemd nifi.service
+  service:
+    name: nifi
+    enabled: yes
+  tags:
+    - apache-nifi
+    - nifi

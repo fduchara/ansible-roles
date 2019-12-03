@@ -1,0 +1,75 @@
+---
+# tasks file for swarm-zookeeper
+
+- name: Install jsondiff
+  apt:
+    name: python3-jsondiff
+    update_cache: yes
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Get info on Docker Swarm
+  docker_swarm_info:
+    nodes: yes
+    debug: yes
+    verbose_output: yes
+  ignore_errors: yes
+  register: result
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Create a directory /opt/swarm-zookeeper
+  file:
+    path: /opt/swarm-zookeeper
+    state: directory
+    mode: '0755'
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Create config zookeeper_jaas.conf
+  template:
+    src: zoo.conf
+    dest: /opt/swarm-zookeeper/zoo.conf
+    backup: true
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Create config zookeeper_jaas.conf
+  template:
+    src: zookeeper_jaas.conf
+    dest: /opt/swarm-zookeeper/zookeeper_jaas.conf
+    backup: true
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Create config stack.yml
+  template:
+    src: stack.yml
+    dest: /opt/swarm-zookeeper/stack.yml
+    backup: true
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper
+
+- name: Deploy stack from a compose file
+  docker_stack:
+    state: present
+    name: zk
+    compose:
+      - /opt/swarm-zookeeper/stack.yml
+  run_once: true
+  tags:
+    - zoo
+    - zookeeper
+    - swarm-zookeeper

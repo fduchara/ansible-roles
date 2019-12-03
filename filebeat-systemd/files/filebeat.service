@@ -1,0 +1,21 @@
+[Unit]
+Description=Filebeat metrics collector from files service
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/filebeat
+ExecStart=/opt/filebeat/filebeat -c /opt/filebeat/filebeat.yml
+ExecReload=/bin/kill -s HUP $MAINPID; /opt/filebeat/filebeat -e -c /opt/filebeat/filebeat.yml
+ExecStop=/bin/kill -s HUP $MAINPID
+PIDFile=/run/filebeat.pid
+KillSignal=SIGCONT
+
+#Hardening
+PrivateTmp=true
+CapabilityBoundingSet=CAP_CHOWN CAP_SETGID CAP_SETUID CAP_DAC_OVERRIDE CAP_KILL CAP_NET_BIND_SERVICE CAP_IPC_LOCK
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+---
+# tasks file for node-exporter-sytemd
+
+- name: Create a directory
+  file:
+    path: /opt/node-exporter
+    state: directory
+    mode: '0755'
+
+- name: Copy node-exporter
+  copy:
+    src: node-exporter
+    dest: /opt/node-exporter/node-exporter
+    owner: root
+    group: root
+    mode: '0700'
+    backup: yes
+  notify: restart node-exporter
+
+- name: Copy systemd file
+  copy:
+    src: node-exporter.service
+    dest: /etc/systemd/system/node-exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  notify: enabled node-exporter

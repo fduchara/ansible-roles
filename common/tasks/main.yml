@@ -1,0 +1,35 @@
+---
+# tasks file for common
+
+- name: Install programm
+  apt:
+    name: ['ntp', 'mc', 'curl', 'htop']
+    update_cache: True
+  tags:
+    - common
+
+- name: set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags:
+    - common
+
+- name: Create /etc/hosts
+  template:
+    src: etc.hosts
+    dest: /etc/hosts
+    backup: true
+  tags:
+    - common
+    - hosts
+
+- name: rewrite /etc/ssh/sshd_config
+  template:
+    src="etc.sshd"
+    dest="/etc/ssh/sshd_config"
+    backup=yes
+    validate='sshd -t -f %s'
+  notify:
+    - restart sshd
+  tags:
+    - common

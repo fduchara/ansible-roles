@@ -1,0 +1,6 @@
+---
+# defaults file for c
+
+Sshd_PermitRootLogin: "yes"
+Sshd_PubkeyAuthentication: "yes"
+Sshd_PasswordAuthentication: "yes"

@@ -1,0 +1,45 @@
+---
+# tasks file for docker-swarm
+
+- name: Get info on Docker Swarm
+  docker_swarm_info:
+    nodes: yes
+    debug: yes
+    verbose_output: yes
+  ignore_errors: yes
+  register: result
+  tags: swarm
+
+- name: Init a new swarm with default parameters
+  docker_swarm:
+    state: present
+    advertise_addr: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2377"
+  run_once: true
+  register: swarm_init
+  tags: swarm
+
+- name: Get info on Docker Swarm
+  docker_swarm_info:
+    nodes: yes
+    debug: yes
+    verbose_output: yes
+  ignore_errors: yes
+  register: result
+  tags: swarm
+
+- name: set facts swarm
+  set_fact:
+    swarm_master: "{{ result.nodes.0.ManagerStatus.Addr }}"
+    swarm_token_manager: "{{ result.swarm_facts.JoinTokens.Manager }}"
+    swarm_token_worker: "{{ result.swarm_facts.JoinTokens.Worker }}"
+  run_once: true
+  tags: swarm
+
+- name: Add manager nodes
+  docker_swarm:
+    state: join
+    advertise_addr: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2377"
+    join_token: "{{ swarm_token_manager }}"
+    remote_addrs: [ '{{ swarm_master }}' ]
+  when: not result.docker_swarm_active
+  tags: swarm

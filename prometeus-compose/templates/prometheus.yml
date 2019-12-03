@@ -1,0 +1,56 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  scrape_timeout: 15s
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+
+rule_files:
+  - "alert.rules"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+{% for job in prometheus_exporters %}
+  - job_name: '{{ job.name }}'
+{% if job.metrics_path is defined  %}
+    metrics_path: {{ job.metrics_path }}
+{% endif %}
+{% if job.scheme is defined  %}
+    scheme: {{ job.scheme }}
+{% endif %}
+{% if job.basic_auth is defined  %}
+    basic_auth:
+      username: {{ job.basic_auth.username }}
+      password: {{ job.basic_auth.password }}
+{% endif %}
+    static_configs:
+      - targets:
+{% for target in job.targets %}
+        - {{ target }}
+{% endfor %}
+
+{% endfor %}
+
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+{% for target in prometheus_blakbox_targets %}
+        - {{ target }}
+{% endfor %}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115

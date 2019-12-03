@@ -1,0 +1,117 @@
+version: '3.3'
+
+services:
+
+  nginx:
+    image: umputun/nginx-le:latest
+    hostname: nginx
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./conf/ssl:/etc/nginx/ssl
+      - ./conf/service-grafana.conf:/etc/nginx/service.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - TZ=Europe/Moscow
+      - LETSENCRYPT=true
+      - LE_EMAIL={{ le_mail }}
+      - LE_FQDN={{ le_fqdn }}
+
+  blackbox:
+    image: prom/blackbox-exporter
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./conf/blackbox-exporter.yml:/etc/blackbox_exporter/config.yml:ro
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter
+    restart: always
+    hostname: prom
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    command:
+      - '--storage.tsdb.retention=61d'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./.tsdb:/prometheus:rw
+      - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./conf/alert.rules:/etc/prometheus/alert.rules:ro
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    environment:
+      - "GF_SERVER_ROOT_URL={{ grafana_url }}"
+      - "GF_SECURITY_ADMIN_PASSWORD={{ grafana_password }}"
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./.grafana:/var/lib/grafana:rw
+      - ./conf/grafana:/mnt:ro
+
+  alertmanager:
+    image: prom/alertmanager
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./conf/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  alertmanager-bot:
+    image: metalmatze/alertmanager-bot
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./.alertmanager-bot:/data \
+    command:
+      - '--alertmanager.url=http://alertmanager:9093'
+      - '--listen.addr=0.0.0.0:8080'
+      - '--store=bolt'
+      - '--bolt.path=/data/bolt.db'
+      - '--telegram.admin={{ telegram_admin_uid }}'
+      - '--telegram.token={{ telegram_bot_token }}'
+      - '--template.paths=/templates/default.tmpl'

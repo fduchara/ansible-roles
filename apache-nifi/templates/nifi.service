@@ -1,0 +1,15 @@
+[Unit]
+Description=Apache Nifi
+After=network.target
+
+[Service]
+Type=simple
+#User=nifi
+#Group=nifi
+ExecStart= /opt/nifi/bin/nifi.sh run
+LimitNOFILE=1000000
+TimeoutStopSec=180
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

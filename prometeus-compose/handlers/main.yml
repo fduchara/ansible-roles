@@ -1,0 +1,8 @@
+---
+# handlers file for prometeus-compose
+
+- name: restart prometheus
+  command: docker-compose restart prometheus chdir=/opt/prometheus/
+
+- name: restart docker-compose
+  command: docker-compose restart -d chdir=/opt/prometheus/

@@ -1,0 +1,8 @@
+[Unit]
+Description=Node Exporter
+
+[Service]
+ExecStart=/opt/node-exporter/node-exporter
+
+[Install]
+WantedBy=multi-user.target

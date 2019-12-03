@@ -1,0 +1,52 @@
+---
+# tasks file for filebeat
+
+#- debug:
+#    msg:
+#      - "use variables:"
+#      - "val: {{ filebeat }}"
+#  tags:
+#    node-exporter-sytemd
+#  when: debug | default( 'false' )
+
+- name: Create a directory /opt/filebeat
+  file:
+    path: /opt/filebeat
+    state: directory
+    mode: '0755'
+
+- name: Copy executable file /opt/filebeat/filebeat
+  copy:
+    src: filebeat
+    dest: /opt/filebeat/filebeat
+    owner: root
+    group: root
+    mode: '0700'
+    backup: true
+  notify: restart filebeat
+
+- name: Create config /opt/filebeat/filebeat.yml
+  template:
+    src: filebeat.yml
+    dest: /opt/filebeat/filebeat.yml
+    owner: root
+    group: root
+    mode: '0644'
+    validate: /opt/filebeat/filebeat test config -e -c %s
+    backup: true
+  notify: restart filebeat
+
+- name: Copy /etc/systemd/system/filebeat.service
+  copy:
+    src: filebeat.service
+    dest: /etc/systemd/system/filebeat.service
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+
+- name: enabled filebeat
+  systemd:
+    name: filebeat
+    enabled: true
+    daemon_reload: true

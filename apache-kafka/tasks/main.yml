@@ -1,0 +1,85 @@
+---
+# tasks file for apache-kafka
+
+- name: Install Kafka dependencies
+  apt:
+    name: openjdk-11-jre
+    update_cache: True
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Download apache kafka
+  get_url:
+    url: http://apache-mirror.rbc.ru/pub/apache/kafka/2.3.0/kafka_2.12-2.3.0.tgz
+    dest: /opt/kafka.tgz
+  register: download
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Extract kafka.tgz into /opt/kafka/
+  unarchive:
+    src: /opt/kafka.tgz
+    dest: /opt/
+    remote_src: True
+  when: download.changed
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Remove old directory
+  file:
+    path: /opt/kafka
+    state: absent
+    recurse: True
+  when: download.changed
+  ignore_errors: yes
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Rename directory
+  raw: mv /opt/kafka_* /opt/kafka -f
+  when: download.changed
+  notify: restart kafka
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Create config /opt/kafka/config/server.properties
+  template:
+    src: server.properties
+    dest: /opt/kafka/config/server.properties
+    backup: true
+  notify: restart kafka
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Create config kafka_jaas.conf
+  template:
+    src: kafka_jaas.conf
+    dest: /opt/kafka/config/kafka_jaas.conf
+    backup: true
+  notify: restart kafka
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Create /etc/systemd/system/kafka.service
+  template:
+    src: kafka.service
+    dest: /etc/systemd/system/kafka.service
+  notify: restart kafka
+  tags:
+    - apache-kafka
+    - kafka
+
+- name: Enable systemd kafka.service
+  service:
+    name: kafka
+    enabled: yes
+  tags:
+    - apache-kafka
+    - kafka

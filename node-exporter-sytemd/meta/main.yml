@@ -1,0 +1,14 @@
+---
+
+galaxy_info:
+  author: melnikov_av
+  description: install node_exporter
+  company: mcs
+  license: BSD
+  min_ansible_version: 1.2
+  platforms:
+    - name: Debian
+      versions:
+        - 18
+  galaxy_tags: [nodeexporter, prometheus]
+dependencies: []

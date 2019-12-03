@@ -1,0 +1,126 @@
+---
+# tasks file for prometeus-compose
+
+- name: Create a directory /opt/prometheus
+  file:
+    path: /opt/prometheus
+    state: directory
+    owner: root
+    group: root
+  tags:
+    - prometheus
+
+- name: Create a directory /opt/prometheus/*
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+  with_items:
+    - /opt/prometheus/.alertmanager-bot
+    - /opt/prometheus/.grafana
+    - /opt/prometheus/.tsdb
+    - /opt/prometheus/conf
+  tags:
+    - prometheus
+
+- name: Copy static configs
+  copy:
+    src: conf
+    dest: /opt/prometheus
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  tags:
+    - prometheus
+
+- name: Create prometheus.yml
+  template:
+    src: prometheus.yml
+    dest: /opt/prometheus/conf/prometheus.yml
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: restart prometheus
+  tags:
+    - prometheus
+
+- name: Create docker-compose.yml
+  template:
+    src: docker-compose.yml
+    dest: /opt/prometheus/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  register: create_result
+  tags:
+    - prometheus
+
+- name: docker-compose pull prometheus
+  command: docker-compose pull chdir=/opt/prometheus/
+  when: create_result.changed
+  tags:
+    - prometheus
+
+- name: docker-compose down
+  command: docker-compose down chdir=/opt/prometheus/
+  when: create_result.changed
+  ignore_errors: yes
+  tags:
+    - prometheus
+
+- name: docker-compose up
+  command: docker-compose up -d chdir=/opt/prometheus/
+  when: create_result.changed
+  tags:
+    - prometheus
+
+- name: "wait for grafana to come up"
+  uri:
+    url: "{{ grafana_url }}"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 1
+  tags:
+    - prometheus
+    - grafana-conf
+
+- name: Create prometheus datasource
+  grafana_datasource:
+    name: "prometheus"
+    grafana_url: "{{ grafana_url }}"
+    grafana_user: "admin"
+    grafana_password: "{{ grafana_password }}"
+    ds_type: "prometheus"
+    ds_url: "http://prometheus:9090"
+  when: create_result.changed
+  tags:
+    - prometheus
+    - grafana-conf
+
+- name: Import grafana dashboards through API
+  uri:
+    url: "{{ grafana_url }}/api/dashboards/db"
+    user: "admin"
+    password: "{{ grafana_password }}"
+    force_basic_auth: true
+    method: POST
+    body_format: json
+    body: >
+      {
+        "dashboard": {{ lookup("file", item) }},
+        "overwrite": true,
+        "message": "Updated by ansible"
+      }
+  with_fileglob:
+    - "roles/prometeus-compose/files/conf/dashboards/*.json"
+  tags:
+    - prometheus
+    - grafana-conf
+

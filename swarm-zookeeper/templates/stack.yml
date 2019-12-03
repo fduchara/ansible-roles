@@ -1,0 +1,25 @@
+version: '3.2'
+
+services:
+{% for i in 1, 2, 3 %}
+  zoo{{ loop.index }}:
+    image: zookeeper
+    restart: always
+    hostname: zoo{{ i }}
+    ports:
+      - target: 2181
+        published: 2181
+        protocol: tcp
+        mode: host
+    environment:
+      ZOO_MY_ID: {{ i }}
+      ZOO_SERVERS: {% for n in 1, 2, 3 %}server.{{ n }}=zoo{{ n }}:2888:3888;2181 {% endfor %} 
+      SERVER_JVMFLAGS: "-Djava.security.auth.login.config=/conf/zookeeper_jaas.conf"
+    volumes:
+       - /opt/swarm-zookeeper/zookeeper_jaas.conf:/conf/zookeeper_jaas.conf
+       - /opt/swarm-zookeeper/zoo.conf:/conf/zoo.conf
+    deploy:
+      placement:
+        constraints:
+          - node.id == {% for nodes in result.nodes %}{% if loop.index == i %}{{ nodes.ID }}{% endif %}{% endfor %} 
+{% endfor %}

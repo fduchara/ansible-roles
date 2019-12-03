@@ -1,0 +1,17 @@
+<loginIdentityProviders>
+    <provider>
+        <identifier>ldap-provider</identifier>
+        <class>org.apache.nifi.ldap.LdapProvider</class>
+        <property name="Authentication Strategy">SIMPLE</property>
+        <property name="Manager DN">uid=admin,cn=users,cn=accounts,dc=ans,dc=test,dc=iac,dc=mchs,dc=ru</property>
+        <property name="Manager Password">Secret123</property>
+        <property name="Referral Strategy">FOLLOW</property>
+        <property name="Connect Timeout">10 secs</property>
+        <property name="Read Timeout">10 secs</property>
+        <property name="Url">ldap://ans.test.iac.mchs.ru:389</property>
+        <property name="User Search Base">cn=accounts,dc=ans,dc=test,dc=iac,dc=mchs,dc=ru</property>
+        <property name="User Search Filter">uid={0}</property>
+        <property name="Identity Strategy">USE_USERNAME</property>
+        <property name="Authentication Expiration">12 hours</property>
+    </provider>
+</loginIdentityProviders>

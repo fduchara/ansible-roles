@@ -1,0 +1,16 @@
+    groups:
+    - name: ssl_expiry.rules
+      rules:
+      - alert: SSLCertExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry{job="blackbox"} - time() < 86400 * 7
+        for: 10m
+        annotations:
+          message: "SSL expire alert SSL certificate for the {% raw %}{{ $labels.instance }}{% endraw %} will expire soon!"
+
+    - name: InstanceDown
+      rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 5m
+        annotations:
+          message: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."

@@ -1,0 +1,15 @@
+---
+# handlers file for apache-nifi
+
+- name: remove old users
+  file:
+    path: "/opt/nifi/conf/{{ item }}"
+    state: absent
+  with_items:
+    - authorizations.xml
+    - users.xml
+
+- name: restart nifi
+  systemd:
+    name: nifi
+    state: restarted

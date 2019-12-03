@@ -1,0 +1,14 @@
+---
+# handlers file for node-exporter-sytemd
+
+- name: restart node-exporter
+  systemd:
+    name: node-exporter
+    state: restarted
+
+- name: enabled node-exporter
+  systemd:
+    name: node-exporter
+    enabled: true
+    daemon_reload: true
+    state: started

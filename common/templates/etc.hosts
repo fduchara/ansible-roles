@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+
+127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4
+
+{{ ansible_default_ipv4.address }}  {{ ansible_hostname }} {{ ansible_fqdn }} {{ inventory_hostname }}
+
+{% for item in groups['all'] %}
+{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_hostname }} {{ hostvars[item].ansible_fqdn }} {{ hostvars[item].ansible_nodename }}
+{% endfor %}
+
+192.168.18.76 freeipa.dev.hdp.iac.mchs.ru
+192.168.22.70 ans.test.iac.mchs.ru

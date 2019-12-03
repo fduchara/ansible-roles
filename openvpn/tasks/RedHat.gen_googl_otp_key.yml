@@ -1,0 +1,57 @@
+---
+
+- name: pam openvpn
+  copy: src=pam.openvpn dest=/etc/pam.d/openvpn backup=yes
+  notify:
+    restart openvpn-server@server
+  when: openvpn_pam
+  tags:
+    - openvpn
+    - openvpn-pam
+    - openvpn-key
+    - openvpn-client-key
+
+- file:
+    path: "{{ openvpn_dir }}/google-authenticator"
+    state: directory
+  when: openvpn_pam
+  tags:
+    - openvpn
+    - openvpn-pam
+    - openvpn-key
+    - openvpn-client-key
+
+- name: check enable client google-authenticator
+  stat: path="{{ openvpn_dir }}/google-authenticator/{{ item }}"
+  with_items: "{{ openvpn_client }}"
+  register: client_google_authenticator
+  when: openvpn_client is defined
+  tags:
+    - openvpn
+    - openvpn-pam
+    - openvpn-key
+    - openvpn-client-key
+
+- name: generate client google-authenticator
+  command: /usr/bin/google-authenticator -t -r1 -R30 -d -w20 -f -l openvpn_{{ inventory_hostname }} -s ./{{ item.item }} chdir={{ openvpn_dir }}/google-authenticator
+  when: not item.stat.exists
+  with_items: "{{ client_google_authenticator.results }}"
+  no_log: true
+  tags:
+    - openvpn
+    - openvpn-pam
+    - openvpn-key
+    - openvpn-client-key
+
+- name: get client google-authenticator
+  fetch:
+    src: "{{ openvpn_dir }}//google-authenticator/{{ item }}"
+    dest: "./files/{{ inventory_hostname }}/openvpn.google-authenticator.{{ item }}"
+    flat: true
+  with_items: "{{ openvpn_client }}"
+  when: openvpn_client is defined
+  tags:
+    - openvpn
+    - openvpn-pam
+    - openvpn-key
+    - openvpn-client-key

@@ -1,0 +1,3 @@
+auth       required     pam_google_authentifactor.so secret=/etc/openvpn/google-authenticator/${USER} forward_pass user=root
+account    include      system-auth
+password   include      system-auth

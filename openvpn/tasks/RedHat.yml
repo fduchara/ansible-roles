@@ -1,0 +1,73 @@
+---
+
+- name: install openvpn and easy-rsa
+  yum: name="{{ item }}" state=latest
+  with_items:
+    - "openvpn"
+    - "easy-rsa"
+  tags:
+    - openvpn
+    - openvpn-install
+
+- include_tasks: "{{ ansible_os_family }}.copy_key.yml"
+  when: openvpn_copy_key and not openvpn_gen_key
+  tags:
+    - openvpn
+    - openvpn-copy-key
+
+- include_tasks: "{{ ansible_os_family }}.gen_key.yml"
+  when: not openvpn_copy_key and openvpn_gen_key
+  tags:
+    - openvpn
+    - openvpn-gen-key
+    - openvpn-install
+
+- name: suricata run script for openvpn
+  template: src=suricata.sh.j2 dest="{{ openvpn_dir }}/server/suricata.sh" mode=0700 backup=yes
+  notify:
+    restart openvpn-server@server
+  when: not openvpn_snort and openvpn_suricata
+  tags:
+    - openvpn
+    - openvpn-suricata
+
+- name: snort run script for openvpn
+  template: src=snort.sh.j2 dest="{{ openvpn_dir }}/server/snort.sh" mode=0700 backup=yes
+  notify:
+    restart openvpn-server@server
+  when: openvpn_snort and not openvpn_suricata
+  tags:
+    - openvpn
+    - openvpn-snort
+
+- name: create server.conf
+  template: src=server.conf.j2 dest="{{ openvpn_dir }}/server/server.conf" backup=yes
+  notify:
+    restart openvpn-server@server
+  tags:
+    - openvpn
+    - openvpn-install
+    - openvpn-config
+
+- include_tasks: "{{ ansible_os_family }}.gen_client_key.yml"
+  when: openvpn_gen_client_key
+  tags:
+    - openvpn
+    - openvpn-install
+    - openvpn-gen-client
+
+- name: enable forwarding ipv4
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: true
+  when: openvpn_ipv4_forward
+
+- name: enable service
+  service:
+    name: openvpn-server@server
+    enabled: true
+    state: started
+  tags:
+    - openvpn
+    - openvpn-install

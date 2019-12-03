@@ -1,0 +1,37 @@
+# {{ ansible_managed }}
+
+port {{ openvpn_port }}
+proto {{ openvpn_proto }}
+dev tun{{ openvpn_port }}{{ openvpn_proto }}
+ca {{ openvpn_dir }}/server/ca.crt
+cert {{ openvpn_dir }}/server/server.crt
+key  {{ openvpn_dir }}/server/server.key
+dh  {{ openvpn_dir }}/server/dh.pem
+{% if openvpn_pam %}
+plugin /usr/lib64/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn
+{% endif %}
+server {{ openvpn_ip_network }}.0 255.255.255.0
+{% for item in openvpn_push %}
+push "{{item}}"
+{% endfor %}
+keepalive 10 120
+comp-lzo
+status /var/log/openvpn-status.log
+persist-key
+persist-tun
+duplicate-cn
+tcp-nodelay
+verb 4
+reneg-sec 0
+sndbuf 393216
+rcvbuf 393216
+client-config-dir /etc/openvpn/ccd
+
+{% if openvpn_snort %}
+script-security 2
+up "/etc/openvpn/server/snort.sh"
+{% endif %}
+{% if openvpn_suricata %}
+script-security 2
+up "/etc/openvpn/server/suricata.sh"
+{% endif %}

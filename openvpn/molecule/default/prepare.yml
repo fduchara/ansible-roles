@@ -1,0 +1,10 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: install
+      yum: name="epel-release" state=latest
+
+    - name: install
+      yum: name="google-authenticator" state=latest

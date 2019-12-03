@@ -1,0 +1,89 @@
+---
+
+- name: copy client generator script
+  template: src=gen_client.sh.j2 dest="{{ openvpn_dir }}/gen_client.sh" mode=0700 backup=yes
+  register: create_gen_client
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- include_tasks: "{{ ansible_os_family }}.gen_googl_otp_key.yml"
+  when: openvpn_pam
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- name: check enable client config
+  stat: path="{{ openvpn_dir }}/{{ item }}.ovpn"
+  with_items: "{{ openvpn_client }}"
+  register: client_config_result
+  when: openvpn_client is defined
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- name: generate client config
+  command: ./gen_client.sh {{ item.item }} chdir={{ openvpn_dir }}
+  when: not item.stat.exists or create_gen_client is changed
+  with_items: "{{ client_config_result.results }}"
+  no_log: true
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- name: create directory ccd
+  file: 
+    path: "/etc/openvpn/ccd"
+    state: directory
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- name: create ccd/clients
+  copy:
+    content: "ifconfig-push {{ openvpn_ip_network }}.{{ 9 + ansible_loop.index * 2 }} {{ openvpn_ip_network }}.{{ 10 + ansible_loop.index * 2 }}"
+    dest: "/etc/openvpn/ccd/{{ item }}"
+  with_items: "{{ openvpn_client }}"
+  loop_control:
+    extended: yes
+  notify:
+    restart openvpn-server@server
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- name: get client config
+  fetch:
+    src: "{{ openvpn_dir }}/{{ item }}.ovpn"
+    dest: "./files/{{ inventory_hostname }}/openvpn.{{ item }}.ovpn"
+    flat: true
+  with_items: "{{ openvpn_client }}"
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- archive:
+    path: "{{ openvpn_dir }}/pki"
+    dest: "{{ openvpn_dir }}/pki-{{ ansible_date_time.date }}.tar.gz"
+  register: create_archive
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key
+
+- fetch:
+    src: "{{ openvpn_dir }}/pki-{{ ansible_date_time.date }}.tar.gz"
+    dest: "./files/{{ inventory_hostname }}/{{ ansible_distribution }}.{{ ansible_distribution_major_version }}.{{ ansible_architecture }}.openvpn.pki.tar.gz"
+    flat: true
+  when: create_archive is changed
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-client-key

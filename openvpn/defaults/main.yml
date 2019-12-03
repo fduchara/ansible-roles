@@ -1,0 +1,23 @@
+---
+
+openvpn_dir: /etc/openvpn
+
+openvpn_copy_key: false
+openvpn_gen_key: false
+openvpn_gen_client_key: false
+
+openvpn_client: []
+
+openvpn_port: 1194
+openvpn_proto: udp
+openvpn_ipv4_forward: false
+
+openvpn_snort: false
+openvpn_suricata: false
+openvpn_pam: false
+
+openvpn_ip_network: 192.168.2
+
+openvpn_push:
+  - "sndbuf 393216"
+  - "rcvbuf 393216"

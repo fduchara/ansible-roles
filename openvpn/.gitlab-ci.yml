@@ -1,0 +1,18 @@
+---
+
+stages:
+  - test
+
+test-lint:
+  stage: test
+  script:
+    - export ANSIBLE_FORCE_COLOR=true
+    - cd $CI_PROJECT_DIR
+    - molecule lint
+    - molecule converge
+    - molecule idempotence
+    - molecule verify
+    - molecule destroy
+
+  tags:
+    - molecule

@@ -1,0 +1,51 @@
+---
+
+- name: copy keys
+  copy:
+    src: "./files/{{ inventory_hostname }}/{{ ansible_distribution }}.{{ ansible_distribution_major_version }}.{{ ansible_architecture }}.openvpn.pki.tar.gz"
+    dest: "{{ openvpn_dir }}/pki.tar.gz"
+    backup: true
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-copy-key
+
+- unarchive:
+    src: "{{ openvpn_dir }}/pki.tar.gz"
+    dest: "{{ openvpn_dir }}"
+    remote_src: true
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-copy-key
+
+- copy: src={{ openvpn_dir }}/pki/{{ item }} dest={{ openvpn_dir }}/server/ owner=root group=root mode=0600 remote_src=yes
+  with_items:
+    - ca.crt
+    - issued/server.crt
+    - private/server.key
+    - dh.pem
+  notify: restart openvpn-server@server
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-copy-key
+
+- file:
+    path: "{{ openvpn_dir }}/google-authenticator"
+    state: directory
+  when: openvpn_client is defined and openvpn_pam
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-copy-key
+
+- copy:
+    src: "./files/{{ inventory_hostname }}/openvpn.google-authenticator.{{ item }}"
+    dest: "{{ openvpn_dir }}/google-authenticator/{{ item }}"
+  with_items: "{{ openvpn_client }}"
+  when: openvpn_client is defined and openvpn_pam
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-copy-key

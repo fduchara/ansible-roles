@@ -1,0 +1,5 @@
+---
+# ./roles/openvpn/handlers/main.yml
+
+- name: restart openvpn-server@server
+  service: name=openvpn-server@server state=restarted

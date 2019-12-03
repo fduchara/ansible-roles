@@ -1,0 +1,45 @@
+---
+# ./roles/openvpn/tasks/main.yml
+
+- debug:
+    msg:
+      - "use variables:"
+      - "openvpn_copy_key: {{ openvpn_copy_key }}"
+      - "openvpn_gen_key: {{ openvpn_gen_key }}"
+      - "openvpn_ipv4_forward: {{ openvpn_ipv4_forward }}"
+      - "openvpn_gen_client_key: {{ openvpn_gen_client_key }}"
+      - "openvpn_snort: {{ openvpn_snort }}"
+      - "openvpn_suricata: {{ openvpn_suricata }}"
+      - "openvpn_pam: {{ openvpn_pam }}"
+      - "openvpn_client: {{ openvpn_client }}"
+      - "openvpn_port: {{ openvpn_port }}"
+      - "openvpn_proto: {{ openvpn_proto }}"
+      - "openvpn_ip_network: {{ openvpn_ip_network }}"
+      - "openvpn_push: {{ openvpn_push }}"
+  tags:
+    - openvpn
+    - openvpn-client-key
+    - openvpn-config
+    - openvpn-copy-key
+    - openvpn-gen-client
+    - openvpn-gen-key
+    - openvpn-install
+    - openvpn-key
+    - openvpn-pam
+    - openvpn-snort
+    - openvpn-suricata
+
+- name: instal OpenVPN
+  include_tasks: "{{ ansible_os_family }}.yml"
+  tags:
+    - openvpn
+    - openvpn-client-key
+    - openvpn-config
+    - openvpn-copy-key
+    - openvpn-gen-client
+    - openvpn-gen-key
+    - openvpn-install
+    - openvpn-key
+    - openvpn-pam
+    - openvpn-snort
+    - openvpn-suricata

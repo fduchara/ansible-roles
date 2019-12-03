@@ -1,0 +1,6 @@
+---
+
+- debug:
+    msg: "role not ready"
+  tags:
+    - openvpn

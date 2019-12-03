@@ -1,0 +1,46 @@
+#!/bin/bash
+CLIENT=$1
+
+if [ -z "$CLIENT" ] ; then
+        echo "Usage:$0 client_name"
+        exit 1
+fi
+
+/usr/share/easy-rsa/3/easyrsa --batch build-client-full $CLIENT nopass
+
+# set enviroment variables
+DIR=`dirname $0`
+CLIENT_CONF=$CLIENT.ovpn
+
+cat <<EOF_CLIENT_CONF > $CLIENT_CONF
+remote {{ openvpn_server_address | default(fansible_ssh_host) }} {{ openvpn_port }} {{ openvpn_proto }} 
+client
+dev tun
+proto tcp-client
+resolv-retry infinite
+nobind
+persist-key
+comp-lzo
+verb 3
+route-method exe
+route-delay 2
+auth-nocache
+{% if openvpn_pam %}
+auth-user-pass
+{% endif %}
+reneg-sec 0
+EOF_CLIENT_CONF
+
+echo '<ca>' >> $CLIENT_CONF
+cat pki/ca.crt >> $CLIENT_CONF
+echo '</ca>' >> $CLIENT_CONF
+
+echo '<cert>' >> $CLIENT_CONF
+cat pki/issued/$CLIENT.crt >> $CLIENT_CONF
+echo '</cert>' >> $CLIENT_CONF
+
+echo '<key>' >> $CLIENT_CONF
+cat pki/private/$CLIENT.key >> $CLIENT_CONF
+echo '</key>' >> $CLIENT_CONF
+
+exit 0

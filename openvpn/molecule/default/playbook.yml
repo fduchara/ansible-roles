@@ -1,0 +1,16 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    openvpn_copy_key: false
+    openvpn_gen_key: true
+    openvpn_ipv4_forward: true
+    openvpn_gen_client_key: true
+    openvpn_client:
+      - test_client1
+      - test_client2
+    openvpn_port: 1194
+    openvpn_proto: udp
+    openvpn_pam: true
+  roles:
+    - role: openvpn

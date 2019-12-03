@@ -1,0 +1,63 @@
+---
+
+- name: check enable keys
+  stat: path={{ openvpn_dir }}/pki/ca.crt
+  register: ca_result
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-gen-key
+
+- name: generate keys openvpn
+  command: /usr/share/easy-rsa/3/easyrsa {{ item }} chdir={{ openvpn_dir }}
+  with_items:
+    - "init-pki"
+    - "gen-dh"
+    - "--batch build-ca nopass"
+    - "--batch build-server-full server nopass"
+  when: not ca_result.stat.exists
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-gen-key
+
+- name: copy key and certs. to copy folder server
+  copy:
+    src: "{{ openvpn_dir }}/pki/{{ item }}"
+    dest: "{{ openvpn_dir }}/server/"
+    owner: root
+    group: root
+    mode: 0600
+    remote_src: true
+    backup: true
+  with_items:
+    - ca.crt
+    - issued/server.crt
+    - private/server.key
+    - dh.pem
+  notify: restart openvpn-server@server
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-gen-key
+
+- name: arhive generated keys
+  archive:
+    path: "{{ openvpn_dir }}/pki"
+    dest: "{{ openvpn_dir }}/pki-{{ ansible_date_time.date }}.tar.gz"
+  when: not ca_result.stat.exists
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-gen-key
+
+- name: download backup arhive
+  fetch:
+    src: "{{ openvpn_dir }}/pki-{{ ansible_date_time.date }}.tar.gz"
+    dest: "./files/{{ inventory_hostname }}/{{ ansible_distribution }}.{{ ansible_distribution_major_version }}.{{ ansible_architecture }}.openvpn.pki.tar.gz"
+    flat: true
+  when: not ca_result.stat.exists
+  tags:
+    - openvpn
+    - openvpn-key
+    - openvpn-gen-key

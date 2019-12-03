@@ -1,0 +1,36 @@
+---
+
+- src: git@code.clubber.me:ansible-roles/openvpn.git
+  scm: git
+  name: openvpn
+  version: "2019.12.02.18.07"
+
+- src: git@code.clubber.me:ansible-roles/hard-lite.git
+  scm: git
+  name: hard-lite
+  version: "2019.11.28.18.14"
+
+- src: git@code.clubber.me:ansible-roles/docker-ce.git
+  scm: git
+  name: docker-ce
+
+- src: git@code.clubber.me:ansible-roles/docker-compose-ce.git
+  scm: git
+  name: docker-compose-ce
+
+- src: git@code.clubber.me:ansible-roles/daemontools.git
+  scm: git
+  name: daemontools
+
+- src: git@code.clubber.me:ansible-roles/daemontools-services.git
+  scm: git
+  name: daemontools-services
+
+- src: git@code.clubber.me:ansible-roles/users.git
+  scm: git
+  name: users
+
+- src: git@code.clubber.me:ansible-roles/docker-compose-monitoring.git
+  scm: git
+  name:  docker-compose-monitoring 
+  version: "2019.11.28.18.04"

@@ -1,0 +1,26 @@
+---
+
+- hosts: hard_lite
+  become: true
+  roles: 
+    - hard-lite
+
+- hosts: docker_ce
+  roles:
+    - docker-ce
+
+- hosts: docker_compose_ce
+  roles:
+    - docker-compose-ce
+
+- hosts: daemontools
+  roles:
+    - daemontools
+
+- hosts: monitoring
+  roles:
+    - docker-compose-monitoring
+
+- hosts: openvpn
+  roles:
+    - openvpn
